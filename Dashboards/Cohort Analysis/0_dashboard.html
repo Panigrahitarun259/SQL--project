@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Cohort Analysis Dashboard</title>
+<style>
+  body { font-family: sans-serif; background: #F1EFE8; padding: 32px; color: #2C2C2A; margin: 0; }
+  h1 { font-size: 20px; font-weight: 500; margin-bottom: 24px; color: #2C2C2A; }
+  .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+  .metric-card { background: #fff; border-radius: 8px; padding: 16px; border: 0.5px solid #D3D1C7; }
+  .metric-label { font-size: 12px; color: #888780; margin-bottom: 4px; }
+  .metric-value { font-size: 22px; font-weight: 500; }
+  .metric-sub { font-size: 11px; color: #B4B2A9; margin-top: 3px; }
+  .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .chart-card { background: #fff; border: 0.5px solid #D3D1C7; border-radius: 12px; padding: 20px; }
+  .chart-card.full { grid-column: 1 / -1; }
+  .chart-title { font-size: 13px; font-weight: 500; color: #5F5E5A; margin-bottom: 10px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; font-size: 11px; color: #888780; }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .sq { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+</style>
+</head><body>
+<h1>Cohort Analysis Dashboard — 2015–2024</h1>
+<div class="metric-grid">
+  <div class="metric-card"><div class="metric-label">Total customers</div><div class="metric-value">49,487</div><div class="metric-sub">across all cohorts</div></div>
+  <div class="metric-card"><div class="metric-label">Total revenue</div><div class="metric-value">$127.1M</div><div class="metric-sub">all cohorts combined</div></div>
+  <div class="metric-card"><div class="metric-label">Avg revenue / customer</div><div class="metric-value">$2,532</div><div class="metric-sub">10-year average</div></div>
+  <div class="metric-card"><div class="metric-label">Best cohort year</div><div class="metric-value">2016</div><div class="metric-sub">$2,896 per customer</div></div>
+</div>
+<div class="chart-row">
+  <div class="chart-card full">
+    <div class="chart-title">Total customers by cohort year</div>
+    <div class="legend">
+      <span><span class="sq" style="background:#378ADD;"></span>Customers acquired</span>
+      <span class="badge" style="background:#FAEEDA;color:#854F0B;">2020 — COVID impact</span>
+      <span class="badge" style="background:#E6F1FB;color:#185FA5;">2024 — partial year</span>
+    </div>
+    <div style="position:relative;height:220px;"><canvas id="c1"></canvas></div>
+  </div>
+</div>
+<div class="chart-row">
+  <div class="chart-card">
+    <div class="chart-title">Total revenue by cohort year</div>
+    <div class="legend"><span><span class="sq" style="background:#5DCAA5;"></span>Revenue (USD)</span></div>
+    <div style="position:relative;height:220px;"><canvas id="c2"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">Revenue per customer trend</div>
+    <div class="legend"><span><span class="sq" style="background:#D85A30;"></span>Avg revenue / customer</span></div>
+    <div style="position:relative;height:220px;"><canvas id="c3"></canvas></div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const years=[2015,2016,2017,2018,2019,2020,2021,2022,2023,2024];
+const customers=[2825,3397,4068,7446,7755,3031,4663,9010,5890,1402];
+const revenue=[7245613,9839134,11771500,19773770,22245060,7058615,11974080,21507550,12890580,2764780];
+const arpc=[2564.82,2896.42,2893.68,2655.62,2868.48,2328.81,2567.89,2387.08,2188.55,1972.03];
+const custColors=years.map(y=>y===2020?'#EF9F27':y===2024?'#85B7EB':'#378ADD');
+const base={responsive:true,maintainAspectRatio:false};
+new Chart(document.getElementById('c1'),{type:'bar',data:{labels:years,datasets:[{data:customers,backgroundColor:custColors,borderWidth:1,borderRadius:4}]},options:{...base,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.raw.toLocaleString()+' customers'}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{callback:v=>(v/1000).toFixed(0)+'k'}}}}});
+new Chart(document.getElementById('c2'),{type:'bar',data:{labels:years,datasets:[{data:revenue,backgroundColor:'#5DCAA5',borderColor:'#0F6E56',borderWidth:1,borderRadius:4}]},options:{...base,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' $'+(ctx.raw/1e6).toFixed(1)+'M'}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{callback:v=>'$'+(v/1e6).toFixed(0)+'M'}}}}});
+new Chart(document.getElementById('c3'),{type:'line',data:{labels:years,datasets:[{data:arpc,borderColor:'#D85A30',backgroundColor:'rgba(216,90,48,0.08)',borderWidth:2,pointBackgroundColor:'#D85A30',pointRadius:5,tension:0.3,fill:true}]},options:{...base,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' $'+ctx.raw.toFixed(0)}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{min:1800,max:3100,grid:{color:'rgba(0,0,0,0.06)'},ticks:{callback:v=>'$'+v.toLocaleString()}}}}});
+</script>
+</body></html>

@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Segmentation Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-base:       #0d0f14;
+    --bg-surface:    #13161e;
+    --bg-raised:     #1a1e2a;
+    --bg-hover:      #21263a;
+    --border:        rgba(255,255,255,0.07);
+    --border-bright: rgba(255,255,255,0.13);
+
+    --accent-cyan:   #00d4c8;
+    --accent-blue:   #4a8ef0;
+    --accent-coral:  #f0614a;
+    --accent-green:  #2ed17a;
+    --accent-purple: #9b7bff;
+
+    --text-primary:   #eef0f6;
+    --text-secondary: #7a8099;
+    --text-muted:     #4a5069;
+
+    --font-display: 'Syne', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+  }
+
+  html, body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  body {
+    background-image:
+      radial-gradient(ellipse 80% 40% at 10% 0%, rgba(0,212,200,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 30% at 90% 100%, rgba(74,142,240,0.05) 0%, transparent 60%);
+    background-attachment: fixed;
+  }
+
+  .page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem 4rem;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .header-left .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .header-left h1 {
+    font-size: clamp(22px, 3vw, 32px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    line-height: 1.1;
+  }
+
+  .header-right {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: right;
+  }
+
+  .dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent-cyan);
+    margin-right: 6px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ── KPI Cards ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 14px;
+    margin-bottom: 1.75rem;
+    animation: fadeUp 0.5s 0.1s ease both;
+  }
+
+  .kpi-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .kpi-card:hover {
+    border-color: var(--border-bright);
+    background: var(--bg-raised);
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+  }
+
+  .kpi-card .kpi-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+  }
+
+  .kpi-card .kpi-value {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .kpi-card .kpi-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  .kpi-accent { color: var(--accent) !important; }
+
+  /* ── Section label ── */
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    padding-left: 2px;
+  }
+
+  /* ── Chart Grid ── */
+  .charts-main {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .chart-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.75rem;
+    transition: border-color 0.2s;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .chart-card:hover { border-color: var(--border-bright); }
+
+  .chart-card:nth-child(1) { animation-delay: 0.15s; }
+  .chart-card:nth-child(2) { animation-delay: 0.22s; }
+  .chart-card:nth-child(3) { animation-delay: 0.29s; }
+  .chart-card:nth-child(4) { animation-delay: 0.36s; }
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+
+  .chart-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+
+  .legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .chart-wrap {
+    position: relative;
+    width: 100%;
+    height: 220px;
+  }
+
+  /* ── Segment Breakdown Bar ── */
+  .breakdown-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 16px;
+    animation: fadeUp 0.5s 0.43s ease both;
+  }
+
+  .breakdown-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 1.25rem;
+  }
+
+  .seg-row {
+    display: grid;
+    grid-template-columns: 160px 1fr 100px 100px 100px;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .seg-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .seg-bar-bg {
+    background: var(--bg-raised);
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+  }
+
+  .seg-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s cubic-bezier(.22,.68,0,1.2);
+  }
+
+  .seg-stat {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-align: right;
+    color: var(--text-secondary);
+  }
+
+  .seg-stat strong {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .table-header {
+    display: grid;
+    grid-template-columns: 160px 1fr 100px 100px 100px;
+    gap: 20px;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+
+  .table-header span {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: right;
+  }
+
+  .table-header span:first-child { text-align: left; }
+  .table-header span:nth-child(2) { text-align: left; }
+
+  /* ── Insight Cards ── */
+  .insight-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 14px;
+    animation: fadeUp 0.5s 0.5s ease both;
+  }
+
+  .insight-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .insight-card:hover {
+    border-color: var(--border-bright);
+    background: var(--bg-raised);
+  }
+
+  .insight-icon {
+    width: 34px; height: 34px;
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .insight-card h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+
+  .insight-card p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .insight-card p strong {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    animation: fadeUp 0.5s 0.55s ease both;
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-main { grid-template-columns: 1fr; }
+    .insight-grid { grid-template-columns: repeat(2, 1fr); }
+    .seg-row, .table-header { grid-template-columns: 130px 1fr 80px 80px; }
+    .seg-row > .seg-stat:last-child, .table-header > span:last-child { display: none; }
+  }
+
+  @media (max-width: 600px) {
+    .page { padding: 1.5rem 1rem 3rem; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .insight-grid { grid-template-columns: 1fr; }
+    .header { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .seg-row, .table-header { grid-template-columns: 110px 1fr 80px; }
+    .seg-row > .seg-stat:nth-child(4),
+    .seg-row > .seg-stat:last-child,
+    .table-header > span:nth-child(4),
+    .table-header > span:last-child { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <p class="eyebrow">Analytics Report</p>
+      <h1>Customer Segmentation<br>Dashboard</h1>
+    </div>
+    <div class="header-right">
+      <span class="dot"></span>Live data<br>
+      <span style="color: var(--text-muted); font-size:11px;">49,487 total customers &nbsp;·&nbsp; 3 segments</span>
+    </div>
+  </header>
+
+  <!-- KPI Row -->
+  <div class="kpi-grid">
+    <div class="kpi-card" style="--accent: var(--accent-cyan);">
+      <p class="kpi-label">Total customers</p>
+      <p class="kpi-value">49,487</p>
+      <p class="kpi-sub">Across all segments</p>
+    </div>
+    <div class="kpi-card" style="--accent: var(--accent-green);">
+      <p class="kpi-label">Total LTV</p>
+      <p class="kpi-value">$206.4<span style="font-size:16px;font-weight:400;color:var(--text-secondary);">M</span></p>
+      <p class="kpi-sub">Lifetime value, all tiers</p>
+    </div>
+    <div class="kpi-card" style="--accent: var(--accent-blue);">
+      <p class="kpi-label">Overall avg LTV</p>
+      <p class="kpi-value">$4,170</p>
+      <p class="kpi-sub">Per customer average</p>
+    </div>
+    <div class="kpi-card" style="--accent: var(--accent-purple);">
+      <p class="kpi-label">LTV multiplier</p>
+      <p class="kpi-value kpi-accent" style="--accent: var(--accent-purple); color: var(--accent-purple);">31×</p>
+      <p class="kpi-sub">High vs low segment</p>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <p class="section-label">Revenue & Customer Analysis</p>
+  <div class="charts-main">
+
+    <!-- Total LTV -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <span class="chart-title">Total LTV by segment ($M)</span>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#f0614a;"></span>Low</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#4a8ef0;"></span>Mid</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#2ed17a;"></span>High</span>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c1" role="img" aria-label="Total LTV bar chart: Low $4.3M, Mid $66.6M, High $135.4M">Low $4.3M, Mid $66.6M, High $135.4M</canvas></div>
+    </div>
+
+    <!-- Customer Count Donut -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <span class="chart-title">Customer count distribution</span>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#f0614a;border-radius:50%;"></span>Low 25%</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#4a8ef0;border-radius:50%;"></span>Mid 50%</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#2ed17a;border-radius:50%;"></span>High 25%</span>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c2" role="img" aria-label="Donut chart: Low 12372 (25%), Mid 24743 (50%), High 12372 (25%)">Low 12372, Mid 24743, High 12372</canvas></div>
+    </div>
+
+    <!-- Avg LTV -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <span class="chart-title">Average LTV per customer ($)</span>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#f0614a;"></span>Low</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#4a8ef0;"></span>Mid</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#2ed17a;"></span>High</span>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c3" role="img" aria-label="Average LTV bar chart: Low $351, Mid $2693, High $10946">Low $351, Mid $2693, High $10946</canvas></div>
+    </div>
+
+    <!-- Revenue vs Customer share -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <span class="chart-title">Revenue share vs customer share (%)</span>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#3a3f55;border:1px dashed #7a8099;"></span>Customers</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#9b7bff;"></span>Revenue</span>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c4" role="img" aria-label="Grouped bars: High 25% customers but 65.6% revenue. Mid 50% customers 32.3% revenue. Low 25% customers 2.1% revenue.">High: 65.6% revenue vs 25% customers</canvas></div>
+    </div>
+
+  </div>
+
+  <!-- Segment Breakdown Table -->
+  <p class="section-label">Segment breakdown</p>
+  <div class="breakdown-card">
+    <div class="table-header">
+      <span>Segment</span>
+      <span style="text-align:left;">Revenue share</span>
+      <span>Customers</span>
+      <span>Total LTV</span>
+      <span>Avg LTV</span>
+    </div>
+    <div class="breakdown-bars">
+
+      <div class="seg-row">
+        <span class="seg-name" style="color:#2ed17a;">&#9632; High value</span>
+        <div>
+          <div class="seg-bar-bg">
+            <div class="seg-bar-fill" style="width:65.6%; background:linear-gradient(90deg,#2ed17a,#00d4c8);"></div>
+          </div>
+        </div>
+        <span class="seg-stat"><strong>12,372</strong></span>
+        <span class="seg-stat"><strong>$135.4M</strong></span>
+        <span class="seg-stat"><strong style="color:#2ed17a;">$10,946</strong></span>
+      </div>
+
+      <div class="seg-row">
+        <span class="seg-name" style="color:#4a8ef0;">&#9632; Mid value</span>
+        <div>
+          <div class="seg-bar-bg">
+            <div class="seg-bar-fill" style="width:32.3%; background:linear-gradient(90deg,#4a8ef0,#9b7bff);"></div>
+          </div>
+        </div>
+        <span class="seg-stat"><strong>24,743</strong></span>
+        <span class="seg-stat"><strong>$66.6M</strong></span>
+        <span class="seg-stat"><strong style="color:#4a8ef0;">$2,693</strong></span>
+      </div>
+
+      <div class="seg-row">
+        <span class="seg-name" style="color:#f0614a;">&#9632; Low value</span>
+        <div>
+          <div class="seg-bar-bg">
+            <div class="seg-bar-fill" style="width:2.1%; background:linear-gradient(90deg,#f0614a,#ffb347);"></div>
+          </div>
+        </div>
+        <span class="seg-stat"><strong>12,372</strong></span>
+        <span class="seg-stat"><strong>$4.3M</strong></span>
+        <span class="seg-stat"><strong style="color:#f0614a;">$351</strong></span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Insights -->
+  <p class="section-label">Key insights & recommendations</p>
+  <div class="insight-grid">
+    <div class="insight-card">
+      <div class="insight-icon" style="background:rgba(46,209,122,0.12);">🏆</div>
+      <h3>Protect high-value customers</h3>
+      <p>Just <strong>25% of customers drive 65.6%</strong> of all revenue ($135.4M). Prioritise retention, personalisation, and loyalty programs for this cohort first — losing even a small slice here hits harder than losing the entire low-value tier.</p>
+    </div>
+    <div class="insight-card">
+      <div class="insight-icon" style="background:rgba(74,142,240,0.12);">🚀</div>
+      <h3>Mid-to-high upgrade is the key lever</h3>
+      <p><strong>24,743 mid-value customers</strong> average $2,693 LTV. If just 10% converted to high-value behaviour, it would unlock ~$102M in incremental LTV. This segment is the single biggest untapped growth opportunity.</p>
+    </div>
+    <div class="insight-card">
+      <div class="insight-icon" style="background:rgba(240,97,74,0.12);">📊</div>
+      <h3>Audit low-value cost-to-serve</h3>
+      <p>Low-value customers average only <strong>$351 LTV</strong> — 31× less than high-value. Identify whether they're early-stage with upgrade potential or genuinely low-intent. Reduce acquisition and servicing costs accordingly to protect margins.</p>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <span>Customer Segmentation Analysis &nbsp;·&nbsp; 3 segments &nbsp;·&nbsp; 49,487 customers</span>
+    <span>Generated by Claude &nbsp;·&nbsp; Anthropic</span>
+  </footer>
+
+</div>
+
+<script>
+  Chart.defaults.color = '#7a8099';
+  Chart.defaults.font.family = "'DM Mono', monospace";
+  Chart.defaults.font.size = 11;
+
+  const gridColor = 'rgba(255,255,255,0.05)';
+  const tickColor = '#4a5069';
+  const coral = '#f0614a', blue = '#4a8ef0', green = '#2ed17a', purple = '#9b7bff', gray = '#3a3f55';
+
+  /* ── 1. Total LTV Bar ── */
+  new Chart(document.getElementById('c1'), {
+    type: 'bar',
+    data: {
+      labels: ['Low value', 'Mid value', 'High value'],
+      datasets: [{
+        data: [4.34, 66.64, 135.43],
+        backgroundColor: [coral, blue, green],
+        borderRadius: 6,
+        barThickness: 52
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: v => ' $' + v.raw.toFixed(1) + 'M' } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tickColor } },
+        y: {
+          grid: { color: gridColor },
+          ticks: { color: tickColor, callback: v => '$' + v + 'M' }
+        }
+      }
+    }
+  });
+
+  /* ── 2. Donut ── */
+  new Chart(document.getElementById('c2'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Low value', 'Mid value', 'High value'],
+      datasets: [{
+        data: [12372, 24743, 12372],
+        backgroundColor: [coral, blue, green],
+        borderWidth: 3,
+        borderColor: '#13161e',
+        hoverOffset: 10
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '65%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: v => ' ' + v.label + ': ' + v.raw.toLocaleString() + ' (' + (v.raw/49487*100).toFixed(0) + '%)' } }
+      }
+    }
+  });
+
+  /* ── 3. Avg LTV Bar ── */
+  new Chart(document.getElementById('c3'), {
+    type: 'bar',
+    data: {
+      labels: ['Low value', 'Mid value', 'High value'],
+      datasets: [{
+        data: [351, 2693, 10946],
+        backgroundColor: [coral, blue, green],
+        borderRadius: 6,
+        barThickness: 52
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: v => ' $' + v.raw.toLocaleString() } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tickColor } },
+        y: {
+          grid: { color: gridColor },
+          ticks: { color: tickColor, callback: v => '$' + (v >= 1000 ? (v/1000).toFixed(0) + 'k' : v) }
+        }
+      }
+    }
+  });
+
+  /* ── 4. Revenue vs Customer % ── */
+  new Chart(document.getElementById('c4'), {
+    type: 'bar',
+    data: {
+      labels: ['Low value', 'Mid value', 'High value'],
+      datasets: [
+        {
+          label: 'Customer %',
+          data: [25, 50, 25],
+          backgroundColor: gray,
+          borderColor: '#7a8099',
+          borderWidth: 1,
+          borderRadius: 4,
+          barThickness: 26
+        },
+        {
+          label: 'Revenue %',
+          data: [2.1, 32.3, 65.6],
+          backgroundColor: purple,
+          borderRadius: 4,
+          barThickness: 26
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: v => ' ' + v.dataset.label + ': ' + v.raw.toFixed(1) + '%' } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tickColor } },
+        y: {
+          grid: { color: gridColor },
+          ticks: { color: tickColor, callback: v => v + '%' },
+          max: 70
+        }
+      }
+    }
+  });
+</script>
+</body>
+</html>

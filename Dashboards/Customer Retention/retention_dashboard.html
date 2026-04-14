@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Retention Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0A0C10;
+    --bg2:      #10141C;
+    --bg3:      #161B26;
+    --border:   rgba(255,255,255,0.07);
+    --border2:  rgba(255,255,255,0.12);
+    --text:     #E8EAF0;
+    --muted:    #7A8099;
+    --dim:      #4A5068;
+    --green:    #00C896;
+    --green2:   #00A87C;
+    --red:      #FF5B35;
+    --red2:     #D94020;
+    --blue:     #4D9EFF;
+    --purple:   #9B7FFF;
+    --amber:    #FFB347;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  html { background: var(--bg); color: var(--text); font-family: var(--font-mono); font-size: 14px; }
+  body { min-height: 100vh; padding: 0; overflow-x: hidden; }
+
+  /* grid bg */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 100%);
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  /* header */
+  .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 40px; border-bottom: 1px solid var(--border2); padding-bottom: 24px; }
+  .header-left {}
+  .eyebrow { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--green); margin-bottom: 8px; }
+  .title { font-family: var(--font-head); font-size: 32px; font-weight: 800; color: #fff; line-height: 1.1; }
+  .subtitle { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .badge { background: rgba(255,91,53,0.15); border: 1px solid rgba(255,91,53,0.3); color: var(--red); font-size: 11px; padding: 4px 10px; border-radius: 4px; margin-top: 12px; display: inline-block; letter-spacing: 0.05em; }
+  .header-right { text-align: right; }
+  .meta { font-size: 11px; color: var(--dim); line-height: 1.8; }
+  .meta span { color: var(--muted); }
+
+  /* kpis */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 28px; }
+  .kpi { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; position: relative; overflow: hidden; }
+  .kpi::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .kpi.green::after { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+  .kpi.red::after   { background: linear-gradient(90deg, transparent, var(--red), transparent); }
+  .kpi.blue::after  { background: linear-gradient(90deg, transparent, var(--blue), transparent); }
+  .kpi.purple::after{ background: linear-gradient(90deg, transparent, var(--purple), transparent); }
+  .kpi-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; }
+  .kpi-val { font-family: var(--font-head); font-size: 30px; font-weight: 700; line-height: 1; }
+  .kpi-val.green { color: var(--green); }
+  .kpi-val.red   { color: var(--red); }
+  .kpi-val.blue  { color: var(--blue); }
+  .kpi-val.white { color: #fff; }
+  .kpi-sub { font-size: 11px; color: var(--dim); margin-top: 6px; }
+
+  /* section label */
+  .section-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* charts grid */
+  .chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; margin-bottom: 16px; }
+  .chart-full { grid-column: 1 / -1; }
+  .chart-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 22px; }
+  .chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .chart-title { font-family: var(--font-head); font-size: 14px; font-weight: 600; color: var(--text); }
+  .chart-sub { font-size: 11px; color: var(--dim); margin-top: 3px; }
+
+  .legend { display: flex; gap: 18px; font-size: 11px; color: var(--muted); }
+  .leg { display: flex; align-items: center; gap: 6px; }
+  .leg-sq { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  /* table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead tr { border-bottom: 1px solid var(--border2); }
+  th { color: var(--dim); font-weight: 400; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 14px; text-align: right; white-space: nowrap; }
+  th:first-child { text-align: left; }
+  td { padding: 11px 14px; border-bottom: 1px solid var(--border); text-align: right; color: var(--text); white-space: nowrap; }
+  td:first-child { text-align: left; font-weight: 500; color: #fff; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; letter-spacing: 0.04em; }
+  .pill.green { background: rgba(0,200,150,0.12); color: var(--green); }
+  .pill.red   { background: rgba(255,91,53,0.12);  color: var(--red); }
+  .bar-cell { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+  .mini-bar { height: 4px; border-radius: 2px; }
+
+  /* footer */
+  .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .footer-note { font-size: 10px; color: var(--dim); }
+  .footer-note span { color: var(--muted); }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .kpi { animation: fadeUp 0.5s ease both; }
+  .kpi:nth-child(1) { animation-delay: 0.05s; }
+  .kpi:nth-child(2) { animation-delay: 0.1s; }
+  .kpi:nth-child(3) { animation-delay: 0.15s; }
+  .kpi:nth-child(4) { animation-delay: 0.2s; }
+  .chart-box { animation: fadeUp 0.5s ease both; animation-delay: 0.25s; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="header">
+    <div class="header-left">
+      <div class="eyebrow">Analytics · Retention Intelligence</div>
+      <h1 class="title">Customer Retention<br>Dashboard</h1>
+      <p class="subtitle">Cohort analysis · 2015 – 2023 · 46,913 customers</p>
+      <div class="badge">⚠ Critical: 91% churn rate — no improvement in 8 years</div>
+    </div>
+    <div class="header-right">
+      <div class="meta">
+        <div>Cohorts analysed <span>9</span></div>
+        <div>Period covered <span>2015 – 2023</span></div>
+        <div>Churn window <span>6 months</span></div>
+        <div>Data source <span>customer_retention.csv</span></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi blue">
+      <div class="kpi-label">Total customers</div>
+      <div class="kpi-val blue" id="kpi-total">0</div>
+      <div class="kpi-sub">Across all 9 cohorts</div>
+    </div>
+    <div class="kpi green">
+      <div class="kpi-label">Total active</div>
+      <div class="kpi-val green" id="kpi-active">0</div>
+      <div class="kpi-sub">9.47% retention rate</div>
+    </div>
+    <div class="kpi red">
+      <div class="kpi-label">Total churned</div>
+      <div class="kpi-val red" id="kpi-churned">0</div>
+      <div class="kpi-sub">90.53% churn rate</div>
+    </div>
+    <div class="kpi purple">
+      <div class="kpi-label">Peak cohort (2022)</div>
+      <div class="kpi-val white">9,010</div>
+      <div class="kpi-sub">937 active · 10% kept</div>
+    </div>
+  </div>
+
+  <!-- Chart row 1 -->
+  <div class="section-label">Cohort volume analysis</div>
+  <div class="chart-grid" style="margin-bottom:16px">
+    <div class="chart-box chart-full">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Active vs Churned customers by cohort year</div>
+          <div class="chart-sub">Absolute customer counts — churned dominates every single year</div>
+        </div>
+        <div class="legend">
+          <div class="leg"><span class="leg-sq" style="background:#00C896"></span>Active</div>
+          <div class="leg"><span class="leg-sq" style="background:#FF5B35"></span>Churned</div>
+        </div>
+      </div>
+      <div style="position:relative;height:260px">
+        <canvas id="c-stacked" role="img" aria-label="Stacked bar chart showing active vs churned customers per cohort year 2015 to 2023"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-grid" style="margin-bottom:28px">
+    <div class="chart-box">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Retention rate (%) by cohort</div>
+          <div class="chart-sub">Flatlined at 9–10% for 8 straight years</div>
+        </div>
+      </div>
+      <div style="position:relative;height:220px">
+        <canvas id="c-retention" role="img" aria-label="Line chart of retention percentage per year, flat at 8 to 10 percent"></canvas>
+      </div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Total cohort size over time</div>
+          <div class="chart-sub">Acquisition is growing — retention is not</div>
+        </div>
+      </div>
+      <div style="position:relative;height:220px">
+        <canvas id="c-size" role="img" aria-label="Bar chart of total cohort size per year from 2015 to 2023"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cohort table -->
+  <div class="section-label">Full cohort breakdown</div>
+  <div class="chart-box" style="margin-bottom:28px">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Cohort-level retention table</div>
+        <div class="chart-sub">All 9 cohorts · sorted by year</div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="cohort-table">
+        <thead>
+          <tr>
+            <th>Cohort year</th>
+            <th>Total customers</th>
+            <th>Active</th>
+            <th>Churned</th>
+            <th>Retention %</th>
+            <th>Churn %</th>
+            <th>Active share bar</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Active count chart -->
+  <div class="section-label">Active customer recovery</div>
+  <div class="chart-grid" style="margin-bottom:28px">
+    <div class="chart-box chart-full">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Active customers recovered per cohort (absolute count)</div>
+          <div class="chart-sub">2022 leads in absolute terms only because the cohort is largest — the rate is identical</div>
+        </div>
+        <div class="legend">
+          <div class="leg"><span class="leg-sq" style="background:#00C896"></span>Active customers</div>
+        </div>
+      </div>
+      <div style="position:relative;height:200px">
+        <canvas id="c-active" role="img" aria-label="Bar chart showing active customer count per cohort year, highest in 2022 at 937"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-note">Customer Retention Analysis · <span>46,913 total customers</span> · Cohorts 2015–2023</div>
+    <div class="footer-note">Churn defined as no purchase in last <span>6 months</span> · Only customers with first purchase &gt;6 months ago included</div>
+  </footer>
+
+</div>
+
+<script>
+const data = [
+  { year:'2015', active:237,  churned:2588, total:2825 },
+  { year:'2016', active:311,  churned:3086, total:3397 },
+  { year:'2017', active:385,  churned:3683, total:4068 },
+  { year:'2018', active:704,  churned:6742, total:7446 },
+  { year:'2019', active:687,  churned:7068, total:7755 },
+  { year:'2020', active:283,  churned:2748, total:3031 },
+  { year:'2021', active:442,  churned:4221, total:4663 },
+  { year:'2022', active:937,  churned:8073, total:9010 },
+  { year:'2023', active:455,  churned:4263, total:4718 },
+];
+
+const years   = data.map(d => d.year);
+const actives = data.map(d => d.active);
+const churneds= data.map(d => d.churned);
+const totals  = data.map(d => d.total);
+const retPcts = data.map(d => Math.round((d.active/d.total)*100));
+
+/* animated counters */
+function animateCount(el, target, duration=1400, prefix='', suffix='') {
+  const start = performance.now();
+  const fmt = n => prefix + n.toLocaleString() + suffix;
+  const step = now => {
+    const p = Math.min((now - start)/duration, 1);
+    const ease = 1 - Math.pow(1-p, 3);
+    el.textContent = fmt(Math.round(ease * target));
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+animateCount(document.getElementById('kpi-total'),   46913);
+animateCount(document.getElementById('kpi-active'),   4441);
+animateCount(document.getElementById('kpi-churned'), 42472);
+
+/* chart defaults */
+Chart.defaults.color = '#7A8099';
+Chart.defaults.font.family = "'DM Mono', monospace";
+Chart.defaults.font.size = 11;
+const gridColor = 'rgba(255,255,255,0.05)';
+
+/* stacked bar */
+new Chart(document.getElementById('c-stacked'), {
+  type: 'bar',
+  data: { labels: years, datasets: [
+    { label:'Active',  data: actives,  backgroundColor:'#00C896', borderRadius:3, borderSkipped:false },
+    { label:'Churned', data: churneds, backgroundColor:'#FF5B35', borderRadius:3, borderSkipped:false }
+  ]},
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins: { legend:{ display:false }, tooltip:{ callbacks:{
+      label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}`
+    }}},
+    scales: {
+      x:{ stacked:true, grid:{display:false}, ticks:{color:'#4A5068'} },
+      y:{ stacked:true, grid:{color:gridColor}, ticks:{color:'#4A5068', callback:v => v>=1000?(v/1000).toFixed(0)+'k':v } }
+    }
+  }
+});
+
+/* retention line */
+new Chart(document.getElementById('c-retention'), {
+  type: 'line',
+  data: { labels: years, datasets: [
+    { label:'Retention %', data: retPcts,
+      borderColor:'#4D9EFF', backgroundColor:'rgba(77,158,255,0.07)',
+      pointBackgroundColor:'#4D9EFF', pointRadius:5, pointHoverRadius:7,
+      fill:true, tension:0.25 },
+    { label:'Avg 9%', data: years.map(()=>9),
+      borderColor:'rgba(255,91,53,0.5)', borderDash:[5,4], borderWidth:1.5,
+      pointRadius:0, fill:false }
+  ]},
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins: { legend:{ display:false }, tooltip:{ callbacks:{ label: ctx => ` ${ctx.parsed.y}%` }}},
+    scales: {
+      x:{ grid:{display:false}, ticks:{color:'#4A5068'} },
+      y:{ min:0, max:20, grid:{color:gridColor}, ticks:{color:'#4A5068', callback:v=>v+'%'} }
+    }
+  }
+});
+
+/* cohort size */
+new Chart(document.getElementById('c-size'), {
+  type: 'bar',
+  data: { labels: years, datasets: [
+    { label:'Total customers', data: totals,
+      backgroundColor: totals.map(v => v===Math.max(...totals) ? '#9B7FFF' : 'rgba(155,127,255,0.4)'),
+      borderRadius:3 }
+  ]},
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins: { legend:{ display:false }, tooltip:{ callbacks:{ label: ctx => ` ${ctx.parsed.y.toLocaleString()} customers` }}},
+    scales: {
+      x:{ grid:{display:false}, ticks:{color:'#4A5068'} },
+      y:{ grid:{color:gridColor}, ticks:{color:'#4A5068', callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v } }
+    }
+  }
+});
+
+/* active bar */
+new Chart(document.getElementById('c-active'), {
+  type: 'bar',
+  data: { labels: years, datasets: [
+    { label:'Active', data: actives,
+      backgroundColor: actives.map(v => v===Math.max(...actives) ? '#00C896' : 'rgba(0,200,150,0.35)'),
+      borderRadius:3 }
+  ]},
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins: { legend:{ display:false }, tooltip:{ callbacks:{ label: ctx => ` ${ctx.parsed.y} active customers` }}},
+    scales: {
+      x:{ grid:{display:false}, ticks:{color:'#4A5068'} },
+      y:{ grid:{color:gridColor}, ticks:{color:'#4A5068'} }
+    }
+  }
+});
+
+/* table */
+const tbody = document.getElementById('table-body');
+data.forEach(d => {
+  const ret = Math.round((d.active/d.total)*100);
+  const churn = 100 - ret;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${d.year}</td>
+    <td>${d.total.toLocaleString()}</td>
+    <td style="color:#00C896">${d.active.toLocaleString()}</td>
+    <td style="color:#FF5B35">${d.churned.toLocaleString()}</td>
+    <td><span class="pill green">${ret}%</span></td>
+    <td><span class="pill red">${churn}%</span></td>
+    <td>
+      <div class="bar-cell">
+        <div style="width:120px;height:4px;background:rgba(255,91,53,0.25);border-radius:2px;overflow:hidden">
+          <div class="mini-bar" style="width:${ret}%;background:#00C896"></div>
+        </div>
+        <span style="color:#4A5068;font-size:11px;width:28px">${ret}%</span>
+      </div>
+    </td>`;
+  tbody.appendChild(tr);
+});
+</script>
+</body>
+</html>

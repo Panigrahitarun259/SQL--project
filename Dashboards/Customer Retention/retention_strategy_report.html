@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retention Strategy Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink:      #0E1117;
+  --ink2:     #1C2130;
+  --ink3:     #283044;
+  --paper:    #F4F1EB;
+  --paper2:   #EDE9E1;
+  --paper3:   #E5E0D5;
+  --text:     #1C2130;
+  --muted:    #6B7280;
+  --dim:      #9CA3AF;
+  --red:      #C8370F;
+  --red-bg:   #FFF0EB;
+  --green:    #0A7C55;
+  --green-bg: #EDFAF4;
+  --blue:     #1A4FA0;
+  --blue-bg:  #EEF3FC;
+  --amber:    #8A4F00;
+  --amber-bg: #FFF8EE;
+  --accent:   #C8370F;
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'Lora', serif;
+  --font-mono: 'DM Mono', monospace;
+}
+
+html { background: var(--paper); color: var(--text); }
+body { font-family: var(--font-body); font-size: 16px; line-height: 1.75; }
+
+/* layout */
+.page { max-width: 900px; margin: 0 auto; padding: 64px 40px 96px; }
+
+/* cover */
+.cover { margin-bottom: 72px; padding-bottom: 48px; border-bottom: 2px solid var(--ink); }
+.cover-tag { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; }
+.cover-title { font-family: var(--font-head); font-size: 52px; font-weight: 800; line-height: 1.0; color: var(--ink); margin-bottom: 12px; }
+.cover-title em { font-style: normal; color: var(--accent); }
+.cover-sub { font-family: var(--font-mono); font-size: 13px; color: var(--muted); margin-top: 16px; }
+.cover-meta { display: flex; gap: 32px; margin-top: 32px; }
+.cover-stat { }
+.cover-stat-val { font-family: var(--font-head); font-size: 36px; font-weight: 800; line-height: 1; }
+.cover-stat-val.red { color: var(--red); }
+.cover-stat-val.green { color: var(--green); }
+.cover-stat-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); margin-top: 4px; }
+
+/* alert */
+.alert { background: var(--ink); color: #fff; padding: 20px 24px; border-radius: 8px; margin-bottom: 48px; display: flex; gap: 16px; align-items: flex-start; }
+.alert-icon { font-family: var(--font-mono); font-size: 13px; color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+.alert-text { font-family: var(--font-mono); font-size: 13px; line-height: 1.6; color: #E8EAF0; }
+.alert-text strong { color: #FF5B35; }
+
+/* sections */
+.section { margin-bottom: 56px; }
+.section-num { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; color: var(--dim); margin-bottom: 6px; }
+h2 { font-family: var(--font-head); font-size: 26px; font-weight: 700; color: var(--ink); margin-bottom: 20px; line-height: 1.2; }
+h2 .hl { color: var(--accent); }
+p { margin-bottom: 16px; color: var(--text); }
+p:last-child { margin-bottom: 0; }
+
+/* findings grid */
+.findings { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 24px 0; }
+.finding { background: var(--paper2); border: 1px solid var(--paper3); border-radius: 8px; padding: 20px; }
+.finding-num { font-family: var(--font-mono); font-size: 10px; color: var(--dim); margin-bottom: 8px; letter-spacing: 0.1em; }
+.finding-title { font-family: var(--font-head); font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+.finding-body { font-size: 13px; color: var(--muted); line-height: 1.6; font-family: var(--font-mono); }
+.finding.red  { border-left: 3px solid var(--red);   background: var(--red-bg); }
+.finding.green{ border-left: 3px solid var(--green); background: var(--green-bg); }
+.finding.blue { border-left: 3px solid var(--blue);  background: var(--blue-bg); }
+.finding.amber{ border-left: 3px solid var(--amber); background: var(--amber-bg); }
+
+/* big stat callout */
+.stat-callout { background: var(--ink); border-radius: 10px; padding: 32px; margin: 28px 0; display: flex; align-items: center; gap: 32px; }
+.stat-callout-num { font-family: var(--font-head); font-size: 72px; font-weight: 800; color: #FF5B35; line-height: 1; flex-shrink: 0; }
+.stat-callout-text { font-family: var(--font-mono); font-size: 13px; color: #9CA3AF; line-height: 1.7; }
+.stat-callout-text strong { color: #E8EAF0; }
+
+/* divider */
+hr { border: none; border-top: 1px solid var(--paper3); margin: 40px 0; }
+
+/* strategies */
+.strategies { display: flex; flex-direction: column; gap: 0; }
+.strategy { border-top: 1px solid var(--paper3); padding: 28px 0; display: grid; grid-template-columns: 48px 1fr; gap: 24px; }
+.strategy:last-child { border-bottom: 1px solid var(--paper3); }
+.strategy-num { font-family: var(--font-head); font-size: 36px; font-weight: 800; color: var(--paper3); line-height: 1; padding-top: 4px; }
+.strategy-content {}
+.strategy-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
+.strategy-body { font-size: 15px; color: var(--muted); line-height: 1.7; font-family: var(--font-body); }
+.strategy-tag { display: inline-block; margin-top: 12px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 4px; }
+.tag-urgent { background: var(--red-bg);   color: var(--red);   }
+.tag-quick  { background: var(--green-bg); color: var(--green); }
+.tag-medium { background: var(--blue-bg);  color: var(--blue);  }
+.tag-longterm { background: var(--amber-bg); color: var(--amber); }
+
+/* cohort table */
+.data-table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 12px; margin: 24px 0; }
+.data-table thead tr { border-bottom: 2px solid var(--ink); }
+.data-table th { padding: 8px 12px; text-align: right; font-weight: 500; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+.data-table th:first-child { text-align: left; }
+.data-table td { padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--paper3); color: var(--text); }
+.data-table td:first-child { text-align: left; font-weight: 500; }
+.data-table tr:hover td { background: var(--paper2); }
+.badge { display: inline-block; padding: 2px 7px; border-radius: 3px; font-size: 10px; }
+.badge-red   { background: var(--red-bg);   color: var(--red);   }
+.badge-green { background: var(--green-bg); color: var(--green); }
+
+/* next steps */
+.next-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; }
+.next-card { background: var(--paper2); border: 1px solid var(--paper3); border-radius: 8px; padding: 18px; }
+.next-horizon { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--dim); margin-bottom: 8px; }
+.next-title { font-family: var(--font-head); font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.next-body { font-size: 12px; color: var(--muted); line-height: 1.6; font-family: var(--font-mono); }
+
+/* footer */
+.report-footer { margin-top: 72px; padding-top: 24px; border-top: 2px solid var(--ink); display: flex; justify-content: space-between; align-items: center; }
+.report-footer-left { font-family: var(--font-mono); font-size: 11px; color: var(--dim); }
+.report-footer-right { font-family: var(--font-mono); font-size: 11px; color: var(--dim); text-align: right; }
+
+@media (max-width:640px) {
+  .page { padding: 32px 20px 64px; }
+  .cover-title { font-size: 36px; }
+  .findings { grid-template-columns: 1fr; }
+  .next-grid { grid-template-columns: 1fr; }
+  .cover-meta { flex-wrap: wrap; gap: 20px; }
+  .stat-callout { flex-direction: column; gap: 16px; }
+  .stat-callout-num { font-size: 52px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Cover -->
+  <div class="cover">
+    <div class="cover-tag">Confidential · Internal Report · Customer Analytics</div>
+    <h1 class="cover-title">The <em>91%</em><br>Churn Problem</h1>
+    <p class="cover-sub" style="font-size:15px;color:var(--muted);font-family:var(--font-body);font-style:italic;margin-top:8px">A retention analysis of 46,913 customers across 9 cohorts — and what to do about it.</p>
+    <div class="cover-meta">
+      <div class="cover-stat">
+        <div class="cover-stat-val red">91%</div>
+        <div class="cover-stat-label">Overall churn rate</div>
+      </div>
+      <div class="cover-stat">
+        <div class="cover-stat-val" style="color:var(--blue)">46,913</div>
+        <div class="cover-stat-label">Total customers</div>
+      </div>
+      <div class="cover-stat">
+        <div class="cover-stat-val green">4,441</div>
+        <div class="cover-stat-label">Active customers</div>
+      </div>
+      <div class="cover-stat">
+        <div class="cover-stat-val" style="color:var(--amber)">9 years</div>
+        <div class="cover-stat-label">No improvement</div>
+      </div>
+    </div>
+    <p class="cover-sub" style="margin-top:24px">Analysis period: 2015–2023 &nbsp;·&nbsp; Churn window: 6 months &nbsp;·&nbsp; Source: customer_retention.csv</p>
+  </div>
+
+  <!-- Alert -->
+  <div class="alert">
+    <div class="alert-icon">!!!</div>
+    <div class="alert-text">
+      <strong>Critical finding:</strong> The churn rate has been locked at 91% for every single cohort from 2015 to 2023. This is not a seasonal anomaly or a bad year — it is a structural, systemic failure in how customers are retained after first purchase. No marketing campaign, no pricing change, and no external event (including a global pandemic in 2020) has moved this number even one percentage point.
+    </div>
+  </div>
+
+  <!-- Section 1: Key Findings -->
+  <div class="section">
+    <div class="section-num">01 — KEY FINDINGS</div>
+    <h2>What the <span class="hl">data tells us</span></h2>
+    <p>The cohort retention analysis spans 46,913 customers acquired between 2015 and 2023. Every customer whose first purchase was more than 6 months before the dataset's most recent date is eligible for classification. Those with no purchase in the last 6 months are marked churned.</p>
+
+    <div class="findings">
+      <div class="finding red">
+        <div class="finding-num">FINDING 01</div>
+        <div class="finding-title">Churn is perfectly uniform</div>
+        <div class="finding-body">91% churn appears in every single cohort without exception. 2022 and 2023 nudge to 90% — a single percentage point, not a trend.</div>
+      </div>
+      <div class="finding green">
+        <div class="finding-num">FINDING 02</div>
+        <div class="finding-title">Acquisition has scaled significantly</div>
+        <div class="finding-body">Cohort size grew from 2,825 in 2015 to 9,010 in 2022 — more than 3× growth. But with retention flat, each new cohort simply creates more churned customers.</div>
+      </div>
+      <div class="finding blue">
+        <div class="finding-num">FINDING 03</div>
+        <div class="finding-title">2020 shows a Covid-era dip</div>
+        <div class="finding-body">The 2020 cohort is the smallest at 3,031 customers — roughly 60% smaller than 2019. Retention still held at 9%, confirming churn is independent of market conditions.</div>
+      </div>
+      <div class="finding amber">
+        <div class="finding-num">FINDING 04</div>
+        <div class="finding-title">2022 is the absolute active leader</div>
+        <div class="finding-body">2022 has the most active customers in raw count (937), but only because the cohort is the biggest — the rate is identical. Volume is masking the retention failure.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Big number -->
+  <div class="stat-callout">
+    <div class="stat-callout-num">42,472</div>
+    <div class="stat-callout-text">
+      <strong>customers have been lost since 2015.</strong><br>
+      At an average order value of even $50, that represents <strong>$2.1M+ in unrealised repeat revenue</strong> — not counting compounding lifetime value. The cost of doing nothing grows with every new cohort acquired.
+    </div>
+  </div>
+
+  <!-- Section 2: Cohort data -->
+  <div class="section">
+    <div class="section-num">02 — COHORT DATA</div>
+    <h2>Full cohort <span class="hl">breakdown</span></h2>
+    <p>The table below shows every cohort with its retention and churn percentages. Note how the retention column is essentially a single repeated value across nine rows.</p>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Cohort year</th>
+          <th>Total</th>
+          <th>Active</th>
+          <th>Churned</th>
+          <th>Retention</th>
+          <th>Churn rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>2015</td><td>2,825</td><td>237</td><td>2,588</td><td><span class="badge badge-green">8%</span></td><td><span class="badge badge-red">92%</span></td></tr>
+        <tr><td>2016</td><td>3,397</td><td>311</td><td>3,086</td><td><span class="badge badge-green">9%</span></td><td><span class="badge badge-red">91%</span></td></tr>
+        <tr><td>2017</td><td>4,068</td><td>385</td><td>3,683</td><td><span class="badge badge-green">9%</span></td><td><span class="badge badge-red">91%</span></td></tr>
+        <tr><td>2018</td><td>7,446</td><td>704</td><td>6,742</td><td><span class="badge badge-green">9%</span></td><td><span class="badge badge-red">91%</span></td></tr>
+        <tr><td>2019</td><td>7,755</td><td>687</td><td>7,068</td><td><span class="badge badge-green">9%</span></td><td><span class="badge badge-red">91%</span></td></tr>
+        <tr><td>2020</td><td>3,031</td><td>283</td><td>2,748</td><td><span class="badge badge-green">9%</span></td><td><span class="badge badge-red">91%</span></td></tr>
+        <tr><td>2021</td><td>4,663</td><td>442</td><td>4,221</td><td><span class="badge badge-green">9%</span></td><td><span class="badge badge-red">91%</span></td></tr>
+        <tr><td>2022</td><td>9,010</td><td>937</td><td>8,073</td><td><span class="badge badge-green">10%</span></td><td><span class="badge badge-red">90%</span></td></tr>
+        <tr><td>2023</td><td>4,718</td><td>455</td><td>4,263</td><td><span class="badge badge-green">10%</span></td><td><span class="badge badge-red">90%</span></td></tr>
+        <tr style="font-weight:600">
+          <td><strong>Total</strong></td>
+          <td><strong>46,913</strong></td>
+          <td style="color:#0A7C55"><strong>4,441</strong></td>
+          <td style="color:#C8370F"><strong>42,472</strong></td>
+          <td><span class="badge badge-green">~9%</span></td>
+          <td><span class="badge badge-red">~91%</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Section 3: Root cause -->
+  <div class="section">
+    <div class="section-num">03 — ROOT CAUSE HYPOTHESIS</div>
+    <h2>Why <span class="hl">91%</span> persists</h2>
+    <p>A churn rate that is uniform across every cohort, every year, every market condition, and every business size suggests the cause is not external. It is structural. The most likely explanation is a weak or absent post-first-purchase experience — customers buy once, receive no meaningful reason to return, and silently disappear.</p>
+    <p>Secondary contributors may include: no loyalty programme, no replenishment reminders, no personalised follow-up, and no second-purchase incentive. The business appears to be optimised entirely for acquisition and not at all for retention.</p>
+    <p>The next analysis step should be computing <em>days between first and last purchase</em> for churned customers. If the majority churned within 30–60 days of acquisition, that confirms the drop-off happens at the very first re-engagement window — and the fix is a post-purchase automation sequence, not a win-back campaign.</p>
+  </div>
+
+  <hr>
+
+  <!-- Section 4: Strategies -->
+  <div class="section">
+    <div class="section-num">04 — RETENTION STRATEGIES</div>
+    <h2>Five actions to <span class="hl">break the 91%</span></h2>
+
+    <div class="strategies">
+
+      <div class="strategy">
+        <div class="strategy-num">01</div>
+        <div class="strategy-content">
+          <div class="strategy-title">Map the churn moment — add days_to_churn</div>
+          <p class="strategy-body">Extend the SQL query with <code style="font-size:12px;background:var(--paper2);padding:1px 5px;border-radius:3px">last_purchase_date - first_purchase_date AS days_to_churn</code> and plot its distribution. If most customers churn within 30–60 days, the intervention window is right after first purchase — not 6 months later. This single query change will reveal where to focus every other strategy.</p>
+          <div class="strategy-tag tag-urgent">Urgent · Do this first</div>
+        </div>
+      </div>
+
+      <div class="strategy">
+        <div class="strategy-num">02</div>
+        <div class="strategy-content">
+          <div class="strategy-title">Build an automated post-purchase sequence</div>
+          <p class="strategy-body">Implement a 3-touch email sequence for all new customers: a day-7 thank-you with a personalised product recommendation, a day-21 content email (how to get more value from their purchase), and a day-45 incentive (10–15% off a second order). The goal is to manufacture a second purchase — customers who buy twice are dramatically more likely to become long-term buyers. This alone could move retention from 9% to 15–18%.</p>
+          <div class="strategy-tag tag-urgent">Urgent · Highest impact</div>
+        </div>
+      </div>
+
+      <div class="strategy">
+        <div class="strategy-num">03</div>
+        <div class="strategy-content">
+          <div class="strategy-title">Introduce a lightweight loyalty mechanic</div>
+          <p class="strategy-body">The data strongly suggests there is no structural reason for a customer to return. A simple points programme — earn on every purchase, redeem for discounts — creates a pull mechanism that brings customers back without requiring a marketing campaign. Even a "buy 3 get 1 free" stamp card logic would represent a fundamental shift in the retention model. This addresses the root cause rather than chasing symptoms.</p>
+          <div class="strategy-tag tag-medium">Medium-term · Structural fix</div>
+        </div>
+      </div>
+
+      <div class="strategy">
+        <div class="strategy-num">04</div>
+        <div class="strategy-content">
+          <div class="strategy-title">Tiered win-back campaigns for churned cohorts</div>
+          <p class="strategy-body">With 42,000+ churned customers in the database, a segmented re-engagement programme can deliver immediate revenue. Segment by: recency of last purchase (6–18 months ago vs 2+ years), total lifetime spend, and product category. Customers who spent most and churned most recently should get a personal offer first. Do not run a blanket blast — it will be ignored and damage deliverability. Even reactivating 5% of the 2021–2022 churned base represents 600+ recovered customers at near-zero acquisition cost.</p>
+          <div class="strategy-tag tag-quick">Quick win · Existing database</div>
+        </div>
+      </div>
+
+      <div class="strategy">
+        <div class="strategy-num">05</div>
+        <div class="strategy-content">
+          <div class="strategy-title">Set a retention KPI and make it visible</div>
+          <p class="strategy-body">The 9% figure has persisted for 8 years partly because it has never been an explicit business target. Set a 12-month goal to move the 2024 cohort retention rate to 15% — a 66% relative improvement that is entirely achievable with strategies 2 and 3 alone. Report this number monthly alongside acquisition metrics. The moment retention is measured and visible to leadership, resources will follow it.</p>
+          <div class="strategy-tag tag-longterm">Long-term · Cultural shift</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Section 5: Next steps -->
+  <div class="section">
+    <div class="section-num">05 — NEXT STEPS</div>
+    <h2>Action <span class="hl">roadmap</span></h2>
+    <p>The following actions are prioritised by time horizon and expected impact.</p>
+    <div class="next-grid">
+      <div class="next-card">
+        <div class="next-horizon">30 days</div>
+        <div class="next-title">Diagnose churn timing</div>
+        <div class="next-body">Add days_to_churn to the SQL query. Plot distribution. Identify the exact drop-off window to target all future interventions correctly.</div>
+      </div>
+      <div class="next-card">
+        <div class="next-horizon">60 days</div>
+        <div class="next-title">Launch post-purchase sequence</div>
+        <div class="next-body">Build and deploy the 3-touch email flow for all new customers acquired from this point forward. Measure second-purchase rate as the primary KPI.</div>
+      </div>
+      <div class="next-card">
+        <div class="next-horizon">60 days</div>
+        <div class="next-title">Segment win-back list</div>
+        <div class="next-body">Pull churned customers from 2021–2022. Segment by spend and recency. Send personalised offers to the top 20% first. Track reactivation rate.</div>
+      </div>
+      <div class="next-card">
+        <div class="next-horizon">90 days</div>
+        <div class="next-title">Define retention KPI</div>
+        <div class="next-body">Set 15% retention target for 2024 cohort. Add monthly reporting to business dashboard. Assign ownership to a single team member.</div>
+      </div>
+      <div class="next-card">
+        <div class="next-horizon">6 months</div>
+        <div class="next-title">Design loyalty programme</div>
+        <div class="next-body">Scoping and build of a points-based loyalty mechanic. Pilot with a single product category before full rollout.</div>
+      </div>
+      <div class="next-card">
+        <div class="next-horizon">12 months</div>
+        <div class="next-title">Re-run cohort analysis</div>
+        <div class="next-body">Repeat this exact analysis on 2024 cohort data to measure whether the needle has moved. Target: 15% retention or above.</div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="report-footer">
+    <div class="report-footer-left">Customer Retention Strategy Report<br>Cohorts 2015–2023 · 46,913 customers</div>
+    <div class="report-footer-right">Churn window: 6 months<br>Source: customer_retention.csv</div>
+  </footer>
+
+</div>
+</body>
+</html>

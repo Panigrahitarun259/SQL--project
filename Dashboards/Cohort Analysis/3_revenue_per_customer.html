@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Revenue per Customer Trend</title>
+<style>
+  body { font-family: sans-serif; background: #fff; padding: 32px; color: #2C2C2A; }
+  h2 { font-size: 16px; font-weight: 500; color: #5F5E5A; margin-bottom: 8px; }
+  .legend { display: flex; gap: 16px; margin-bottom: 12px; font-size: 12px; color: #5F5E5A; }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .sq { width: 10px; height: 10px; border-radius: 2px; }
+</style>
+</head><body>
+<h2>Revenue per customer trend</h2>
+<div class="legend">
+  <span><span class="sq" style="background:#D85A30;"></span>Avg revenue / customer</span>
+</div>
+<div style="position:relative;height:320px;"><canvas id="c"></canvas></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const years=[2015,2016,2017,2018,2019,2020,2021,2022,2023,2024];
+const arpc=[2564.82,2896.42,2893.68,2655.62,2868.48,2328.81,2567.89,2387.08,2188.55,1972.03];
+new Chart(document.getElementById('c'),{type:'line',data:{labels:years,datasets:[{data:arpc,borderColor:'#D85A30',backgroundColor:'rgba(216,90,48,0.08)',borderWidth:2,pointBackgroundColor:'#D85A30',pointRadius:5,tension:0.3,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' $'+ctx.raw.toFixed(0)}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{min:1800,max:3100,grid:{color:'rgba(0,0,0,0.06)'},ticks:{callback:v=>'$'+v.toLocaleString()}}}}});
+</script>
+</body></html>

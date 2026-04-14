@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Total Revenue by Cohort Year</title>
+<style>
+  body { font-family: sans-serif; background: #fff; padding: 32px; color: #2C2C2A; }
+  h2 { font-size: 16px; font-weight: 500; color: #5F5E5A; margin-bottom: 8px; }
+  .legend { display: flex; gap: 16px; margin-bottom: 12px; font-size: 12px; color: #5F5E5A; }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .sq { width: 10px; height: 10px; border-radius: 2px; }
+</style>
+</head><body>
+<h2>Total revenue by cohort year</h2>
+<div class="legend">
+  <span><span class="sq" style="background:#5DCAA5;"></span>Revenue (USD)</span>
+</div>
+<div style="position:relative;height:320px;"><canvas id="c"></canvas></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const years=[2015,2016,2017,2018,2019,2020,2021,2022,2023,2024];
+const revenue=[7245613,9839134,11771500,19773770,22245060,7058615,11974080,21507550,12890580,2764780];
+new Chart(document.getElementById('c'),{type:'bar',data:{labels:years,datasets:[{data:revenue,backgroundColor:'#5DCAA5',borderColor:'#0F6E56',borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' $'+(ctx.raw/1e6).toFixed(1)+'M'}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{callback:v=>'$'+(v/1e6).toFixed(0)+'M'}}}}});
+</script>
+</body></html>
