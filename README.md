@@ -233,3 +233,10 @@ SELECT
 
 
 ```
+### 🤝 Let's Connect!
+
+Whether you want to discuss the SQL scripts in this repo, talk about remote work trends, or just say hi—my inbox is open!
+
+* 💼 **LinkedIn:** [Connect with me on LinkedIn](https://www.linkedin.com/in/tarun-panigrahi-523534325)
+* 🐙 **GitHub:** [Follow my latest projects](https://github.com/Rimuru259)
+* 📧 **Gmail:** [Send me an email](mailto:tarunpanigrahi259@gmail.com)
