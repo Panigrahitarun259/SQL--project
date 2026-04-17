@@ -29,7 +29,7 @@ SQL-project/
 [View Dashboard](https://panigrahitarun259.github.io/SQL--project/Dashboards/Customer_Segmentation/customer_segmentation_dashboard.html)
 
 ### 📸 Screenshots
-![Segmentation Dashboard](./Images\customer_segmentation.png)
+![Segmentation Dashboard](./Images/customer_segmentation.png)
 
 
 
