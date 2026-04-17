@@ -27,7 +27,7 @@ SQL-project/
 **Who are our most valuable customers?**
 
 ### 🔗 Dashboard
-[View Dashboard](./Dashboards/Customer%20Segmentation/)
+[View Dashboard](https://panigrahitarun259.github.io/SQL--project/Dashboards/Customer_Segmentation/customer_segmentation_dashboard.html)
 
 ### 📸 Screenshots
 <!-- Add your dashboard screenshots here -->
@@ -54,7 +54,7 @@ SQL-project/
 **How do different customer groups generate revenue?**
 
 ### 🔗 Dashboard
-[View Dashboard](./Dashboards/Cohort%20Analysis/)
+[View Dashboard](https://panigrahitarun259.github.io/SQL--project/Dashboards/Cohort_Analysis/0_dashboard.html)
 
 ### 📸 Screenshots
 <!-- Add your dashboard screenshots here -->
