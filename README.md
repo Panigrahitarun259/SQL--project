@@ -81,7 +81,7 @@ SQL-project/
 **Who hasn't purchased recently?**
 
 ### 🔗 Dashboard
-[View Dashboard](./Dashboards/Customer%20Retention/)
+[View Dashboard](https://panigrahitarun259.github.io/SQL--project/Dashboards/Customer_Retention/retention_dashboard.html)
 
 ### 📸 Screenshots
 <!-- Add your dashboard screenshots here -->
